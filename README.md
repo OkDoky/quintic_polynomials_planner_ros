@@ -35,5 +35,5 @@ catkin_make
 ```
 - Launch quintic_polynomial_server ROS server
 ```
-roslaunch quintic_polynomials_planner_ros quintic_polynomial_server.launch
+roslaunch quintic_polynomials_planner_ros quintic_polynomials_server.launch
 ```
