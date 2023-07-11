@@ -1,5 +1,5 @@
 # Quintic Polynomials Planner for ROS
-This package is an Quintic Polynomial Planner configured with ROS service.
+This repo is an Quintic Polynomial Planner configured with ROS service.
 
 ## Service Request
 - start_pnt (geometry_msgs/Point)
