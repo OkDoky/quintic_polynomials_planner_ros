@@ -1,0 +1,10 @@
+geometry_msgs/Point start_pnt
+geometry_msgs/Twist start_vel
+geometry_msgs/Twist start_acc
+geometry_msgs/Point goal_pnt
+geometry_msgs/Twist goal_vel
+geometry_msgs/Twist goal_acc
+std_msgs/Float32 T
+---
+std_msgs/Float32[] x_coeff
+std_msgs/Float32[] y_coeff
