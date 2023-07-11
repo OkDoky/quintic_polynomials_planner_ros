@@ -1,4 +1,4 @@
-# Quintic Polynomial Planner for ROS
+# Quintic Polynomials Planner for ROS
 This package is an Quintic Polynomial Planner configured with ROS service.
 
 ## Service Request
