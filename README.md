@@ -27,7 +27,7 @@ Tested on Ubuntu 20.04, ROS Noetic.
 ## Getting Started
 - Clone this repo in your src directory of ROS workspace.
 ```
-git clone https://github.com/rohgal/astar_ros.git
+git clone https://github.com/rohgal/quintic_polynomials_planner_ros.git
 ```
 - Build
 ```
