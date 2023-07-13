@@ -33,6 +33,10 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${Eigen_INCLUDE_DIRS}
 )
-
-add_executable(${PROJECT_NAME} src/quintic_polynomials_server.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+add_library(
+  quintic_polynomial_planner
+  src/quintic_polynomial.cpp
+)
+add_executable(${PROJECT_NAME}_node src/quintic_polynomial_node.cpp)
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+target_link_libraries(quintic_polynomial_planner)
