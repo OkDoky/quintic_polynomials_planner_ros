@@ -1,5 +1,5 @@
-#ifndef QUINDIC_POLYNOMIALS_PLANNER_ROS_H
-#define QUINDIC_POLYNOMIALS_PLANNER_ROS_H
+#ifndef QUINTIC_POLYNOMIAL_H
+#define QUINTIC_POLYNOMIAL_H
 
 #include <iostream>
 #include <fstream>
@@ -9,12 +9,13 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <nav_msgs/Path.h>
 #include <Eigen/Eigen>
 #include <tf2/convert.h>
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include "quintic_polynomials_planner_ros/GetPolynomials.h"
+#include "spline_smooth_filter.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -82,14 +83,13 @@ class QuinticPolynomialsPlanner {
   private:
     double max_speed_, max_throttle_;
     double speed_epsilon_;
+    double feedback_epsilon_;
     double xy_goal_tolerance_;
   public:
-    // // for test polynomial path
-    // ros::ServiceServer solve_polynomial_cb_;
-    // ros::Publisher pub_polynomial_plan_;
-
+    QuinticPolynomialsPlanner();
     QuinticPolynomialsPlanner(double max_speed, double max_throttle);
     ~QuinticPolynomialsPlanner();
+    void initialize(double max_speed, double max_throttle);
     void calculateTrackingTime(const geometry_msgs::PoseStamped& global_pose,
       const geometry_msgs::PoseStamped& goal_pose,
       const geometry_msgs::Twist& feedback_vel,
@@ -100,12 +100,9 @@ class QuinticPolynomialsPlanner {
       const geometry_msgs::Twist& feedback_vel,
       const std::vector<geometry_msgs::PoseStamped>& global_plan,
       const std::string& frame_id,
-      std::vector<geometry_msgs::PoseStamped>& polynomial_plan);
-    
-    // std::vector<std_msgs::Float32> convertToFloat32Array(const std::vector<double>& input);
-    // vector<double> getCoefficients(vector<double> start, vector<double> end, double T);
-    // bool solvePolynomials(quintic_polynomials_planner_ros::GetPolynomials::Request& req, quintic_polynomials_planner_ros::GetPolynomials::Response& res);
+      const bool free_target_vector,
+      std::vector<geometry_msgs::PoseStamped>& smooth_plan);
 };
 
 
-#endif /* QUINDIC_POLYNOMIALS_PLANNER_ROS_H */
+#endif /* QUINTIC_POLYNOMIAL_H */
