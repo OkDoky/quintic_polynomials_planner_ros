@@ -1,6 +1,0 @@
-<launch>
-
-    <node pkg="quintic_polynomials_planner_ros" type="quintic_polynomials_planner_ros" name="quintic_polynomials_server" output="screen">
-    </node>
-
-</launch>
