@@ -7,25 +7,19 @@ find_package(cmake_modules REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(Eigen REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS
+find_package(catkin REQUIRED 
+    COMPONENTS
         roscpp
-        std_msgs
         geometry_msgs
-        nav_msgs
         tf
-        message_generation
         )
 
-add_service_files(
-  FILES
-  GetPolynomials.srv
-)
-
-generate_messages(DEPENDENCIES std_msgs geometry_msgs nav_msgs)
 
 catkin_package(
-        CATKIN_DEPENDS roscpp std_msgs geometry_msgs nav_msgs tf message_runtime
-        DEPENDS Eigen
+        INCLUDE_DIRS include
+        LIBRARIES quintic_polynomial_planner
+        CATKIN_DEPENDS roscpp geometry_msgs tf 
+        DEPENDS Eigen 
 )
 
 include_directories(
@@ -37,6 +31,4 @@ add_library(
   quintic_polynomial_planner
   src/quintic_polynomial.cpp
 )
-add_executable(${PROJECT_NAME}_node src/quintic_polynomial_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
-target_link_libraries(quintic_polynomial_planner)
+target_link_libraries(quintic_polynomial_planner ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
