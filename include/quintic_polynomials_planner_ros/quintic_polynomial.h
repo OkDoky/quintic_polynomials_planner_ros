@@ -16,6 +16,7 @@
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "spline_smooth_filter.h"
+#include <fenv.h>
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -85,6 +86,7 @@ class QuinticPolynomialsPlanner {
     double speed_epsilon_;
     double feedback_epsilon_;
     double xy_goal_tolerance_;
+    double max_time_;
   public:
     QuinticPolynomialsPlanner();
     QuinticPolynomialsPlanner(double max_speed, double max_throttle);
