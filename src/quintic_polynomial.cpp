@@ -20,6 +20,7 @@ void QuinticPolynomialsPlanner::initialize(double max_speed, double max_throttle
   speed_epsilon_ = 0.5;
   xy_goal_tolerance_ = 0.5;
   feedback_epsilon_ = 0.05;
+  max_time_ = 15.0;
   std::cout << "[QuinticPolynomialsPlanner] init speed : " << max_speed_ <<", throttle : " << max_throttle_ << std::endl;
 }
 
@@ -39,16 +40,25 @@ void QuinticPolynomialsPlanner::calculateTrackingTime(const geometry_msgs::PoseS
   double v = feedback_vel.linear.x;
   if(goal_to_end_plan <= xy_goal_tolerance_){
     // deceleration
-    T = ((dist_to_goal - (1/2)*pow(v, 2)/max_throttle_)/v) + (v/max_throttle_);
+    if (abs(v) < 0.1){
+        T = 2 * sqrt(dist_to_goal);
+    }else{
+      T = ((dist_to_goal - (1/2)*pow(v, 2)/max_throttle_)/v) + (v/max_throttle_);
+    }
   }else{
     // acceleration
     if (v <= max_speed_-speed_epsilon_){
       T = ((max_speed_ - v)/max_throttle_) + ((dist_to_goal - (pow(max_speed_,2)-pow(v,2))/(2*max_throttle_))/max_speed_);
     } else{
+      if (abs(v) < 0.001){
+        v = 0.001;
+      }
       T = dist_to_goal/v;
     }
   }
-  // T *= 1.3;
+  if (T > max_time_){
+    T = max_time_;
+  }
 }
 
 void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamped& global_pose,
@@ -96,7 +106,6 @@ void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamp
   
   double T;
   calculateTrackingTime(global_pose, goal_pose, feedback_vel, global_plan, T);
-  
   vector<double> coefficients_x = getCoefficients(start_x, end_x, T);
   vector<double> coefficients_y = getCoefficients(start_y, end_y, T);
 
