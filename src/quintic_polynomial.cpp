@@ -38,30 +38,30 @@ void QuinticPolynomialsPlanner::calculateTrackingTime(const geometry_msgs::PoseS
   //     global_pose.pose.position.x, global_pose.pose.position.y,
   //     goal_pose.pose.position.x, goal_pose.pose.position.y);
   double v = feedback_vel.linear.x;
-  if(goal_to_end_plan <= xy_goal_tolerance_ && abs(v) <=max_speed_-speed_epsilon_){
-    // deceleration
-    if (abs(v) < 0.1 || v <= 0.0){
-      T = 2 * sqrt(dist_to_goal);
+  try{
+    if(goal_to_end_plan <= xy_goal_tolerance_ && abs(v) <=max_speed_-speed_epsilon_){
+      // deceleration
+      if (abs(v) < 0.1 || v <= 0.0){
+        T = 2 * sqrt(dist_to_goal);
+      }else{
+        T = ((dist_to_goal - (v*v)/(2*max_throttle_))/v) + (v/max_throttle_);
+      }
     }else{
-      if (v < speed_epsilon_){
-        v = speed_epsilon_;
+      // acceleration
+      if (abs(v) <= max_speed_-speed_epsilon_){
+        T = ((max_speed_ - v)/max_throttle_) + ((dist_to_goal - (max_speed_*max_speed_-v*v)/(2*max_throttle_))/max_speed_);
+      } else{
+        if (abs(v) < 0.001){
+          v = 0.001;
+        }
+        T = dist_to_goal/v;
       }
-      T = ((dist_to_goal - (v*v)/(2*max_throttle_))/v) + (v/max_throttle_);
-      std::cout << "[QuinticPolynomialPlanner] [deceldown] T is over : " << T << ", v is : " << v << ", remain dist : " << dist_to_goal << std::endl;
     }
-  }else{
-    // acceleration
-    if (abs(v) <= max_speed_-speed_epsilon_){
-      T = ((max_speed_ - v)/max_throttle_) + ((dist_to_goal - (max_speed_*max_speed_-v*v)/(2*max_throttle_))/max_speed_);
-    } else{
-      if (abs(v) < 0.001){
-        v = 0.001;
-      }
-      T = dist_to_goal/v;
+    if (T > max_time_){
+      T = max_time_;
     }
-  }
-  if (T > max_time_){
-    T = max_time_;
+  }catch (...){
+    std::cout << "QuinticPolynomialPlanner] error.." << std::endl;
   }
 }
 
