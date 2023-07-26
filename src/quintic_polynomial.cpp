@@ -124,7 +124,7 @@ void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamp
   int num_point = static_cast<int>(T*10); // 10 is hz of local planner..
   double x,y;
   std::vector<geometry_msgs::PoseStamped> polynomial_plan;
-  for (int i = 0; i < num_point; i++){
+  for (int i = 1; i < num_point; i++){
     x = outputPolynomial(i*0.1, coefficients_x);
     y = outputPolynomial(i*0.1, coefficients_y);
     temp_pose.pose.position.x = x;
