@@ -81,9 +81,9 @@ class QuinticPolynomialsPlanner {
     double min_point_resolution_;
   public:
     QuinticPolynomialsPlanner();
-    QuinticPolynomialsPlanner(double max_speed, double max_throttle);
+    QuinticPolynomialsPlanner(double max_speed, double max_throttle, double min_point_resolution);
     ~QuinticPolynomialsPlanner();
-    void initialize(double max_speed, double max_throttle);
+    void initialize(double max_speed, double max_throttle, double min_point_resolution);
     void calculateTrackingTime(const geometry_msgs::PoseStamped& global_pose,
       const geometry_msgs::PoseStamped& goal_pose,
       const geometry_msgs::Twist& feedback_vel,
