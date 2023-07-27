@@ -1,8 +1,8 @@
 #include "quintic_polynomials_planner_ros/quintic_polynomial.h"
 
-QuinticPolynomialsPlanner::QuinticPolynomialsPlanner(double max_speed, double max_throttle) 
+QuinticPolynomialsPlanner::QuinticPolynomialsPlanner(double max_speed, double max_throttle, double min_point_resolution) 
     : max_speed_(max_speed), max_throttle_(max_throttle), speed_epsilon_(0.05), 
-    xy_goal_tolerance_(0.05), feedback_epsilon_(0.05), min_point_resolution_(0.03){
+    xy_goal_tolerance_(0.05), feedback_epsilon_(0.05), min_point_resolution_(min_point_resolution){
   std::cout << "[QuinticPolynomialPlanner] init speed : " << max_speed_ << ", throttle : " << max_throttle_ << std::endl;
 }
 
@@ -14,14 +14,14 @@ QuinticPolynomialsPlanner::QuinticPolynomialsPlanner()
   std::cout << "[QuinticPolynomialPlanner] only init object.." << std::endl;
 }
 
-void QuinticPolynomialsPlanner::initialize(double max_speed, double max_throttle){
+void QuinticPolynomialsPlanner::initialize(double max_speed, double max_throttle, double min_point_resolution){
   max_speed_ = max_speed;
   max_throttle_ = max_throttle;
   speed_epsilon_ = 0.05;
   xy_goal_tolerance_ = 0.5;
   feedback_epsilon_ = 0.05;
   max_time_ = 15.0;
-  min_point_resolution_ = 0.03;
+  min_point_resolution_ = min_point_resolution;
   std::cout << "[QuinticPolynomialsPlanner] init speed : " << max_speed_ <<", throttle : " << max_throttle_ << std::endl;
 }
 
@@ -131,9 +131,10 @@ void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamp
   temp_pose.header.frame_id = frame_id;
   temp_pose.header.stamp = ros::Time::now();
   int num_point = static_cast<int>(T*50); // 10 is hz of local planner..
+  const int degree = 5;
   double x,y;
   std::vector<geometry_msgs::PoseStamped> polynomial_plan;
-  for (int i = 1; i <= num_point; i++){
+  for (int i = 0; i <= num_point; i++){
     x = outputPolynomial(i*0.02, coefficients_x);
     y = outputPolynomial(i*0.02, coefficients_y);
     if (std::isnan(x) || std::isnan(y)){
@@ -146,27 +147,21 @@ void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamp
     temp_pose.pose.position.y = y;
     polynomial_plan.push_back(temp_pose);
   }
-  temp_pose.pose.position.x = goal_pose.pose.position.x;
-  temp_pose.pose.position.y = goal_pose.pose.position.y;
-  temp_pose.pose.orientation = goal_pose.pose.orientation;
-  polynomial_plan.push_back(temp_pose);
-  // smooth_plan = polynomial_plan;
-  if (polynomial_plan.size() < 5){
-    smooth_plan = polynomial_plan;
+  polynomial_plan.push_back(goal_pose);
+  if (polynomial_plan.size() < degree +2){ // spline has to get fixed more then degree points..
     tf2::Quaternion q;
     q.setRPY(0,0,0);
-    for (int j = 1; j < smooth_plan.size(); j++){
+    smooth_plan.push_back(polynomial_plan.front());
+    for (int j = 1; j < polynomial_plan.size(); j++){
+      smooth_plan.push_back(polynomial_plan[j]);
       double dx = smooth_plan[j].pose.position.x - smooth_plan[j-1].pose.position.x;
       double dy = smooth_plan[j].pose.position.y - smooth_plan[j-1].pose.position.y;
       double yaw = atan2(dy, dx);
       q.setRPY(0,0,yaw);
-      smooth_plan[j].pose.orientation = tf2::toMsg(q);
-      if (j == 1){
-        smooth_plan[j-1].pose.orientation = tf2::toMsg(q);
-      }
+      smooth_plan[j-1].pose.orientation = tf2::toMsg(q);
     }
   }else{
-    splineSmooth(polynomial_plan, smooth_plan);
+    splineSmooth(polynomial_plan, smooth_plan, degree);
   }
 }
 
