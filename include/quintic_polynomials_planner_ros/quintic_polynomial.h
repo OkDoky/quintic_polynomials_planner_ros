@@ -21,31 +21,6 @@
 using namespace std;
 using Eigen::MatrixXd;
 
-/**
- * @brief perpendicular distance for line and two points.
- * 
- * @param x1 global plan first point x
- * @param y1 global plan first point y
- * @param x2 global plan end point x
- * @param y2 global plan end point y
- * @param x0 global pose x
- * @param y0 global pose y
- * @param x3 goal pose x
- * @param y3 goal pose y
- * @return double 
- */
-double calPerpendicularDistance(double x1, double y1, double x2, double y2, 
-    double x0, double y0, double x3, double y3){
-  double signed_dist_0 = ((x2 - x1) * (y0 - y1) - (x0 - x1) * (y2 - y1))/
-      sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-  double signed_dist_3 = ((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1))/ 
-      sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-  if (signed_dist_0 * signed_dist_3 < 0){
-    return abs(signed_dist_0) + abs(signed_dist_3);
-  }else{
-    return abs(signed_dist_0 - signed_dist_3);
-  }
-}
 
 vector<double> getCoefficients(vector<double> start, vector<double> end, double T) {
   MatrixXd A = MatrixXd(3, 3);
@@ -69,7 +44,23 @@ vector<double> getCoefficients(vector<double> start, vector<double> end, double 
     return result;
 }
 
+inline double trapezoid_area(double v1, double v2, double slope){
+  return (pow(std::max(v1,v2),2) - pow(std::min(v1,v2),2))/(2*slope);
+}
+
+inline double triangle_area(double v, double slope){
+  return (pow(v,2)/(2*slope));
+}
+
 inline double outputPolynomial(double time, vector<double> coeffs){
+  if (std::isnan(time) || std::isinf(time)){
+    std::cout << "[outputPolynomial] time is nan or inf : " << time << std::endl;
+  }
+  for (double coeff : coeffs){
+    if (std::isnan(coeff)){
+      std::cout << "[outputPolynomial] coeff is nan.." << std::endl;
+    }
+  }
   std::vector<int> indices(coeffs.size());
   std::iota(indices.begin(), indices.end(), 0);  // Fill with 0, 1, 2, ..., coeffs.size()-1
 
@@ -87,6 +78,7 @@ class QuinticPolynomialsPlanner {
     double feedback_epsilon_;
     double xy_goal_tolerance_;
     double max_time_;
+    double min_point_resolution_;
   public:
     QuinticPolynomialsPlanner();
     QuinticPolynomialsPlanner(double max_speed, double max_throttle);
