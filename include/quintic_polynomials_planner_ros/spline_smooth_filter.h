@@ -7,9 +7,9 @@
 #include <cmath>
 
 void splineSmooth(const std::vector<geometry_msgs::PoseStamped>& path,
-                std::vector<geometry_msgs::PoseStamped>& smooth_plan){
+                std::vector<geometry_msgs::PoseStamped>& smooth_plan,
+                const int degree){
 
-    const int degree = 3;
     const Eigen::Index numKnots = path.size();
     const std::string frame_id = path[0].header.frame_id;
     const ros::Time plan_time = path[0].header.stamp;
