@@ -30,6 +30,9 @@ void splineSmooth(const std::vector<geometry_msgs::PoseStamped>& path,
     pose.pose.orientation = tf2::toMsg(q);
     for (int i = 0; i < numKnots; ++i){
         auto point = spline(knots[i]);
+        if (std::isnan(point[0]) || std::isnan(point[1])){
+            std::cout << "[SPLINE] data is nan.." << numKnots << std::endl;
+        }
         pose.pose.position.x = point[0];
         pose.pose.position.y = point[1];
         if (i < numKnots -1){
