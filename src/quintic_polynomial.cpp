@@ -1,27 +1,28 @@
 #include "quintic_polynomials_planner_ros/quintic_polynomial.h"
 
-QuinticPolynomialsPlanner::QuinticPolynomialsPlanner(double max_speed, double max_throttle, double min_point_resolution) 
-    : max_speed_(max_speed), max_throttle_(max_throttle), speed_epsilon_(0.05), 
-    xy_goal_tolerance_(0.05), feedback_epsilon_(0.05), min_point_resolution_(min_point_resolution){
+QuinticPolynomialsPlanner::QuinticPolynomialsPlanner(double max_speed, double max_throttle, double min_point_resolution, double heading_yaw_error_threshold) 
+    : max_speed_(max_speed), max_throttle_(max_throttle), speed_epsilon_(0.05),
+    xy_goal_tolerance_(0.05), feedback_epsilon_(0.1), min_point_resolution_(min_point_resolution), heading_yaw_error_threshold_(heading_yaw_error_threshold){
   std::cout << "[QuinticPolynomialPlanner] init speed : " << max_speed_ << ", throttle : " << max_throttle_ << std::endl;
 }
 
 QuinticPolynomialsPlanner::~QuinticPolynomialsPlanner(){}
 
 QuinticPolynomialsPlanner::QuinticPolynomialsPlanner()
-    : max_speed_(0.0), max_throttle_(0.0), speed_epsilon_(0.05), 
-    xy_goal_tolerance_(0.05), feedback_epsilon_(0.05), min_point_resolution_(0.03){
+    : max_speed_(0.0), max_throttle_(0.0), speed_epsilon_(0.05),
+    xy_goal_tolerance_(0.05), feedback_epsilon_(0.1), min_point_resolution_(0.03), heading_yaw_error_threshold_(0.1745){
   std::cout << "[QuinticPolynomialPlanner] only init object.." << std::endl;
 }
 
-void QuinticPolynomialsPlanner::initialize(double max_speed, double max_throttle, double min_point_resolution){
+void QuinticPolynomialsPlanner::initialize(double max_speed, double max_throttle, double min_point_resolution, double heading_yaw_error_threshold){
   max_speed_ = max_speed;
   max_throttle_ = max_throttle;
   speed_epsilon_ = 0.05;
   xy_goal_tolerance_ = 0.5;
-  feedback_epsilon_ = 0.05;
+  feedback_epsilon_ = 0.1;
   max_time_ = 15.0;
   min_point_resolution_ = min_point_resolution;
+  heading_yaw_error_threshold_ = heading_yaw_error_threshold;
   std::cout << "[QuinticPolynomialsPlanner] init speed : " << max_speed_ <<", throttle : " << max_throttle_ << std::endl;
 }
 
@@ -94,6 +95,7 @@ void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamp
   tpy = goal_pose.pose.position.y;
 
   double cyaw, tyaw;
+  double hyaw;
   if (!free_target_vector){
     tyaw = atan2(global_plan.back().pose.position.y -global_plan[0].pose.position.y,
                 global_plan.back().pose.position.x -global_plan[0].pose.position.x);
@@ -103,14 +105,22 @@ void QuinticPolynomialsPlanner::getPolynomialPlan(const geometry_msgs::PoseStamp
   }
   tvx = cos(tyaw);
   tvy = sin(tyaw);
+  
+  hyaw = atan2(tpy-cpy, tpx-cpx);
 
   cyaw = tf2::getYaw(global_pose.pose.orientation);
-  if (abs(cyaw - tyaw) > 0.5236){
-    cyaw = tyaw;  
-  } // 30 degrees
-  cvx = (feedback_vel.linear.x + feedback_epsilon_) * cos(cyaw);
-  cvy = (feedback_vel.linear.x + feedback_epsilon_) * sin(cyaw);
-
+  if (abs(cyaw - hyaw) > heading_yaw_error_threshold_){
+    cyaw = hyaw;
+  } // 10 degrees
+  if (abs(feedback_vel.linear.x) < abs(feedback_epsilon_)){
+    double fe = std::copysign(feedback_epsilon_, feedback_vel.linear.x);
+    cvx = (feedback_vel.linear.x + fe) * cos(cyaw);
+    cvy = (feedback_vel.linear.x + fe) * sin(cyaw);
+  }else{
+    cvx = feedback_vel.linear.x * cos(cyaw);
+    cvy = feedback_vel.linear.x * sin(cyaw);
+  }
+  
   tax = 0.0;
   tay = 0.0;
   cax = 0.0;
